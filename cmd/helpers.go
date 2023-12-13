@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -45,6 +46,31 @@ func changeDirectory(dir string) {
 	}
 }
 
+func createFile(fileName string, dir string) {
+
+	if err := os.Chdir(dir); err != nil {
+		log.Fatalf("Error changing directory: %v", err)
+	}
+
+	file, err := os.Create(fileName)
+	if err != nil {
+		fmt.Println("Error creating file:", err)
+		return
+	}
+	defer file.Close()
+
+	content := `//Start writing here\n
+	console.log("Hello World");`
+	_, err = file.WriteString(content)
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+		return
+	}
+
+	fmt.Printf("Successfully created and wrote to %s/%s\n", dir, fileName)
+
+}
+
 func initNodeProject(cmd *cobra.Command) {
 	def, _ := cmd.Flags().GetBool("yes")
 	cmdInit := exec.Command("npm", "init")
@@ -64,6 +90,7 @@ func initNodeProject(cmd *cobra.Command) {
 }
 
 func installLibraries(cmd *cobra.Command, flag string) {
+	usage := cmd.Use
 	librariesStr, _ := cmd.Flags().GetString(flag)
 	libraries := strings.Fields(librariesStr)
 	if len(libraries) > 0 {
@@ -73,6 +100,11 @@ func installLibraries(cmd *cobra.Command, flag string) {
 		if flag == "dev-libs" {
 			npmArgs = append(npmArgs, "--save-dev")
 		}
+
+		if usage == "ts-node" {
+			npmArgs = append(npmArgs, "typescript")
+		}
+
 		npmArgs = append(npmArgs, libraries...)
 
 		installCmd := exec.Command("npm", npmArgs...)
@@ -85,4 +117,64 @@ func installLibraries(cmd *cobra.Command, flag string) {
 		}
 		fmt.Println("Node modules installed successfully.")
 	}
+}
+
+func generateTSConfigFile() {
+	// Create an instance of the TSConfig structure with your desired values.
+	config := TSConfig{
+		CompilerOptions: CompilerOptions{
+			Target:          "ES6",
+			Module:          "CommonJS",
+			OutDir:          "./dist",
+			RootDir:         "./src",
+			Strict:          true,
+			EsModuleInterop: true,
+			SkipLibCheck:    true,
+		},
+		Include: []string{"src/**/*.ts"},
+		Exclude: []string{"node_modules"},
+	}
+
+	// Marshal the struct to JSON.
+	jsonData, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return
+	}
+
+	// Write the JSON data to a file.
+	fileName := "tsconfig.json"
+	err = os.WriteFile(fileName, jsonData, 0644)
+	if err != nil {
+		fmt.Println("Error writing JSON to file:", err)
+		return
+	}
+
+	fmt.Printf("Generated %s\n", fileName)
+}
+
+func InstallTSC() {
+	// Check if tsc is installed by running a command.
+	cmd := exec.Command("tsc", "--version")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		// tsc is not installed; let's install it.
+		fmt.Println("tsc is not installed. Installing TypeScript...")
+		installCmd := exec.Command("npm", "install", "-g", "typescript")
+		installCmd.Stdout = os.Stdout
+		installCmd.Stderr = os.Stderr
+
+		if err := installCmd.Run(); err != nil {
+			fmt.Printf("Error: %v\n", err)
+		}
+
+		fmt.Println("TypeScript has been installed successfully.")
+	} else {
+		// tsc is already installed.
+		fmt.Println("TypeScript is already installed.")
+	}
+
 }
