@@ -12,13 +12,12 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "nixgen",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Nix Gen Code Generator",
+	Long: `Welcome to NodeGen: Your Node.js Project Generator!
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	NodeGen is a powerful and easy-to-use command line tool designed to kickstart your Node.js development. 
+	With just a few flags, you can generate a structured Node.js project, 
+	saving you time and setting you up with best practices.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

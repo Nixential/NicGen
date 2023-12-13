@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -28,6 +29,7 @@ func init() {
 }
 
 func generateNodeJS(cmd *cobra.Command, args []string) {
+	var stderr bytes.Buffer
 	//Create the directory
 	dir, errDir := cmd.Flags().GetString("directory")
 	if errDir != nil {
@@ -36,9 +38,15 @@ func generateNodeJS(cmd *cobra.Command, args []string) {
 
 	if dir != "" {
 		cmd := exec.Command("mkdir", dir)
+
+		cmd.Stderr = &stderr // Capture standard error
+
 		if err := cmd.Run(); err != nil {
-			log.Fatal("Error executing command:", err)
+			fmt.Println("Error executing command:", err)
+			fmt.Println("Standard error output:", stderr.String())
+			return
 		}
+
 		fmt.Printf("Directory %v created successfully\n", dir)
 	}
 
